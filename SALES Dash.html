@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalesPulse · Analytics Dashboard</title>
+  <meta name="description" content="Professional interactive sales analytics dashboard — real-time KPIs, trends, and business insights." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" />
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg-base: #05070e;
+  --bg-surface: #0b0f1a;
+  --bg-card: rgba(14,18,32,0.85);
+  --bg-card-solid: #0e1220;
+  --bg-sidebar: #080b14;
+  --glass-bg: rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-border-hover: rgba(255,255,255,0.12);
+  --accent-blue: #5b9aff;
+  --accent-violet: #a78bfa;
+  --accent-cyan: #22d3ee;
+  --accent-emerald: #34d399;
+  --accent-rose: #fb7185;
+  --accent-amber: #fbbf24;
+  --accent-pink: #f472b6;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --sidebar-w: 272px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --shadow-card: 0 4px 32px rgba(0,0,0,0.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(91,154,255,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(34,211,238,0.04) 0%, transparent 50%);
+  animation: ambientDrift 25s ease-in-out infinite alternate;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes ambientDrift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-3%, 2%) rotate(2deg); }
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e2740; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2e3a54; }
+
+/* ── SIDEBAR ────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+}
+
+.sidebar-logo {
+  padding: 28px 22px 22px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.logo-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+  box-shadow: 0 0 24px rgba(91,154,255,0.3), 0 0 60px rgba(91,154,255,0.1);
+  position: relative;
+}
+
+.logo-icon svg { width: 22px; height: 22px; }
+
+.sidebar-logo h1 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff, var(--accent-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-logo p {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 3px;
+}
+
+.sidebar-section { padding: 22px 20px 0; }
+
+.sidebar-section-title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 16px;
+}
+
+.filter-group { margin-bottom: 16px; }
+
+.filter-label {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.filter-icon { font-size: 0.9rem; opacity: 0.65; }
+
+.filter-select {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  padding: 10px 34px 10px 13px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+}
+
+.filter-select:hover { border-color: var(--glass-border-hover); background: rgba(255,255,255,0.05); }
+.filter-select:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(91,154,255,0.12), 0 0 16px rgba(91,154,255,0.08); }
+.filter-select option { background: #111827; }
+
+.date-range-group { display: flex; flex-direction: column; gap: 8px; }
+.date-input-wrap label { font-size: 0.68rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 500; }
+
+input[type="date"] {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  padding: 10px 13px;
+  transition: all 0.25s ease;
+  color-scheme: dark;
+}
+
+input[type="date"]:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(91,154,255,0.12); }
+
+.reset-btn {
+  margin: 20px 20px 0;
+  width: calc(100% - 40px);
+  padding: 11px;
+  background: linear-gradient(135deg, rgba(91,154,255,0.12), rgba(167,139,250,0.12));
+  border: 1px solid rgba(91,154,255,0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent-blue);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.03em;
+  position: relative;
+  overflow: hidden;
+}
+
+.reset-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(91,154,255,0.15), rgba(167,139,250,0.15));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.reset-btn:hover { border-color: var(--accent-blue); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(91,154,255,0.15); }
+.reset-btn:hover::before { opacity: 1; }
+.reset-btn:active { transform: translateY(0); }
+
+.sidebar-footer { margin-top: auto; padding: 18px 20px; border-top: 1px solid var(--glass-border); }
+
+.data-badge {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.data-badge .dot {
+  width: 8px; height: 8px;
+  background: var(--accent-emerald);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-emerald);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+.data-badge span { font-size: 0.7rem; color: var(--text-secondary); }
+
+/* ── MAIN ───────────────────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; z-index: 1; }
+
+.topbar {
+  background: rgba(11,15,26,0.8);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 20px 36px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.dashboard-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ffffff 0%, var(--accent-blue) 60%, var(--accent-violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+}
+
+.dashboard-subtitle { font-size: 0.76rem; color: var(--text-muted); margin-top: 4px; font-weight: 400; }
+
+.topbar-right { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+
+.badge-pill {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.badge-pill.live {
+  background: rgba(52,211,153,0.1);
+  border: 1px solid rgba(52,211,153,0.25);
+  color: var(--accent-emerald);
+  animation: livePulse 3s ease-in-out infinite;
+}
+
+@keyframes livePulse { 0%, 100% { box-shadow: none; } 50% { box-shadow: 0 0 12px rgba(52,211,153,0.2); } }
+
+.badge-pill.records {
+  background: rgba(91,154,255,0.08);
+  border: 1px solid rgba(91,154,255,0.2);
+  color: var(--accent-blue);
+}
+
+.content { padding: 30px 36px 48px; display: flex; flex-direction: column; gap: 30px; }
+
+.section-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.section-heading::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--glass-border), transparent); }
+
+/* ── KPI CARDS ──────────────────────────────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+
+.kpi-card.blue::before   { background: radial-gradient(ellipse at 30% 20%, rgba(91,154,255,0.08), transparent 70%); }
+.kpi-card.violet::before { background: radial-gradient(ellipse at 30% 20%, rgba(167,139,250,0.08), transparent 70%); }
+.kpi-card.cyan::before   { background: radial-gradient(ellipse at 30% 20%, rgba(34,211,238,0.08), transparent 70%); }
+.kpi-card.emerald::before{ background: radial-gradient(ellipse at 30% 20%, rgba(52,211,153,0.08), transparent 70%); }
+
+.kpi-card:hover { transform: translateY(-4px); border-color: var(--glass-border-hover); }
+.kpi-card:hover::before { opacity: 1; }
+
+.kpi-card.blue:hover   { box-shadow: var(--shadow-card), 0 0 30px rgba(91,154,255,0.12); border-color: rgba(91,154,255,0.3); }
+.kpi-card.violet:hover { box-shadow: var(--shadow-card), 0 0 30px rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.3); }
+.kpi-card.cyan:hover   { box-shadow: var(--shadow-card), 0 0 30px rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.3); }
+.kpi-card.emerald:hover{ box-shadow: var(--shadow-card), 0 0 30px rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.3); }
+
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 2px;
+  border-radius: 2px;
+  opacity: 0.6;
+  transition: all 0.35s;
+}
+.kpi-card:hover::after { left: 10%; right: 10%; opacity: 1; }
+.blue::after   { background: linear-gradient(90deg, transparent, var(--accent-blue), transparent); }
+.violet::after { background: linear-gradient(90deg, transparent, var(--accent-violet), transparent); }
+.cyan::after   { background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent); }
+.emerald::after{ background: linear-gradient(90deg, transparent, var(--accent-emerald), transparent); }
+
+.kpi-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+
+.kpi-icon {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+
+.kpi-icon svg { width: 22px; height: 22px; }
+
+.blue .kpi-icon    { background: rgba(91,154,255,0.12);  color: var(--accent-blue); box-shadow: 0 0 20px rgba(91,154,255,0.1); }
+.violet .kpi-icon  { background: rgba(167,139,250,0.12); color: var(--accent-violet); box-shadow: 0 0 20px rgba(167,139,250,0.1); }
+.cyan .kpi-icon    { background: rgba(34,211,238,0.12);  color: var(--accent-cyan); box-shadow: 0 0 20px rgba(34,211,238,0.1); }
+.emerald .kpi-icon { background: rgba(52,211,153,0.12);  color: var(--accent-emerald); box-shadow: 0 0 20px rgba(52,211,153,0.1); }
+
+.kpi-badge {
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.kpi-badge.up   { background: rgba(52,211,153,0.1); color: var(--accent-emerald); border: 1px solid rgba(52,211,153,0.2); }
+.kpi-badge.down { background: rgba(251,113,133,0.1); color: var(--accent-rose); border: 1px solid rgba(251,113,133,0.2); }
+.kpi-badge.neutral { background: rgba(148,163,184,0.06); color: var(--text-muted); border: 1px solid var(--glass-border); }
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.03em;
+}
+
+.kpi-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.kpi-sublabel {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── HIGHLIGHTS ─────────────────────────────────────────────── */
+.highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.highlight-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.highlight-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+
+.highlight-card.gold::before  { background: radial-gradient(ellipse at 10% 50%, rgba(251,191,36,0.06), transparent 60%); }
+.highlight-card.teal::before  { background: radial-gradient(ellipse at 10% 50%, rgba(34,211,238,0.06), transparent 60%); }
+.highlight-card:hover { transform: translateY(-3px); border-color: var(--glass-border-hover); }
+.highlight-card:hover::before { opacity: 1; }
+
+.highlight-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.gold .highlight-icon { background: rgba(251,191,36,0.1); box-shadow: 0 0 24px rgba(251,191,36,0.15); }
+.teal .highlight-icon { background: rgba(34,211,238,0.1); box-shadow: 0 0 24px rgba(34,211,238,0.15); }
+
+.highlight-info { flex: 1; position: relative; z-index: 1; }
+
+.highlight-tag { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 5px; }
+.gold .highlight-tag { color: var(--accent-amber); }
+.teal .highlight-tag { color: var(--accent-cyan); }
+
+.highlight-name { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 3px; letter-spacing: -0.01em; }
+.highlight-meta { font-size: 0.74rem; color: var(--text-secondary); font-weight: 500; }
+
+/* ── CHARTS ─────────────────────────────────────────────────── */
+.charts-row { display: grid; gap: 16px; }
+.charts-row-2 { grid-template-columns: 1fr 1fr; }
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-card);
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+}
+
+.chart-card:hover { transform: translateY(-3px); border-color: var(--glass-border-hover); box-shadow: var(--shadow-card), 0 8px 32px rgba(0,0,0,0.3); }
+
+.chart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+
+.chart-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; letter-spacing: -0.01em; }
+.chart-subtitle { font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; font-weight: 400; }
+
+.chart-icon-wrap {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.chart-wrap { position: relative; flex: 1; min-height: 220px; }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  color: var(--text-muted);
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.empty-state .icon { font-size: 2rem; opacity: 0.3; }
+
+/* ── FOOTER ─────────────────────────────────────────────────── */
+.dashboard-footer {
+  text-align: center;
+  padding: 18px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--glass-border);
+  background: var(--bg-surface);
+  letter-spacing: 0.05em;
+}
+
+/* ── ANIMATIONS ─────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.kpi-card     { animation: fadeInUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+.kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-card:nth-child(2) { animation-delay: 0.1s; }
+.kpi-card:nth-child(3) { animation-delay: 0.15s; }
+.kpi-card:nth-child(4) { animation-delay: 0.2s; }
+
+.highlight-card { animation: fadeInUp 0.5s cubic-bezier(0.22,1,0.36,1) both; animation-delay: 0.25s; }
+.chart-card     { animation: fadeInScale 0.6s cubic-bezier(0.22,1,0.36,1) both; animation-delay: 0.3s; }
+
+/* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 1400px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .charts-row-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 1100px) {
+  .sidebar { width: 240px; min-width: 240px; }
+  .highlights { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  body { flex-direction: column; }
+  .sidebar { width: 100%; min-width: 100%; height: auto; position: static; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .content { padding: 20px 16px 32px; }
+  .topbar  { padding: 14px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" role="complementary" aria-label="Dashboard Filters">
+  <div class="sidebar-logo">
+    <div class="logo-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4h-4z"/></svg>
+    </div>
+    <h1>SalesPulse</h1>
+    <p>Analytics Dashboard</p>
+  </div>
+
+  <div class="sidebar-section">
+    <p class="sidebar-section-title">Filters &amp; Slicers</p>
+
+    <div class="filter-group">
+      <label class="filter-label" for="filter-city"><span class="filter-icon">🏙️</span> City</label>
+      <select class="filter-select" id="filter-city" aria-label="Filter by City"></select>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label" for="filter-category"><span class="filter-icon">🏷️</span> Category</label>
+      <select class="filter-select" id="filter-category" aria-label="Filter by Category"></select>
+    </div>
+
+    <div class="filter-group">
+      <label class="filter-label" for="filter-product"><span class="filter-icon">📦</span> Product</label>
+      <select class="filter-select" id="filter-product" aria-label="Filter by Product"></select>
+    </div>
+
+    <div class="filter-group">
+      <p class="filter-label"><span class="filter-icon">📅</span> Date Range</p>
+      <div class="date-range-group">
+        <div class="date-input-wrap">
+          <label for="filter-date-from">From</label>
+          <input type="date" id="filter-date-from" aria-label="Start date" />
+        </div>
+        <div class="date-input-wrap">
+          <label for="filter-date-to">To</label>
+          <input type="date" id="filter-date-to" aria-label="End date" />
+        </div>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="reset-filters" aria-label="Reset all filters">↺ &nbsp; Reset All Filters</button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="data-badge">
+      <span class="dot" aria-hidden="true"></span>
+      <span>Dataset · 50 orders loaded</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main" role="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <h2 class="dashboard-title" id="dashboard-title">Sales Dashboard</h2>
+      <p class="dashboard-subtitle" id="dashboard-subtitle">Loading data…</p>
+    </div>
+    <div class="topbar-right">
+      <span class="badge-pill live">● Live</span>
+      <span class="badge-pill records" id="records-badge">50 records</span>
+    </div>
+  </header>
+
+  <section class="content">
+
+    <!-- KPI Cards -->
+    <div>
+      <p class="section-heading">Key Performance Indicators</p>
+      <div class="kpi-grid" role="list">
+
+        <article class="kpi-card blue" role="listitem">
+          <div class="kpi-top">
+            <div class="kpi-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <span class="kpi-badge neutral" id="kpi-sales-badge">—</span>
+          </div>
+          <div class="kpi-value" id="kpi-sales-value">—</div>
+          <div class="kpi-label">Total Sales</div>
+          <div class="kpi-sublabel" id="kpi-sales-sub">—</div>
+        </article>
+
+        <article class="kpi-card violet" role="listitem">
+          <div class="kpi-top">
+            <div class="kpi-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
+            <span class="kpi-badge neutral" id="kpi-profit-badge">—</span>
+          </div>
+          <div class="kpi-value" id="kpi-profit-value">—</div>
+          <div class="kpi-label">Total Profit</div>
+          <div class="kpi-sublabel" id="kpi-profit-sub">—</div>
+        </article>
+
+        <article class="kpi-card cyan" role="listitem">
+          <div class="kpi-top">
+            <div class="kpi-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+            </div>
+            <span class="kpi-badge neutral" id="kpi-orders-badge">—</span>
+          </div>
+          <div class="kpi-value" id="kpi-orders-value">—</div>
+          <div class="kpi-label">Total Orders</div>
+          <div class="kpi-sublabel" id="kpi-orders-sub">—</div>
+        </article>
+
+        <article class="kpi-card emerald" role="listitem">
+          <div class="kpi-top">
+            <div class="kpi-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <span class="kpi-badge neutral" id="kpi-quantity-badge">—</span>
+          </div>
+          <div class="kpi-value" id="kpi-quantity-value">—</div>
+          <div class="kpi-label">Total Quantity</div>
+          <div class="kpi-sublabel" id="kpi-quantity-sub">—</div>
+        </article>
+
+      </div>
+    </div>
+
+    <!-- Highlights -->
+    <div>
+      <p class="section-heading">Highlights</p>
+      <div class="highlights">
+        <article class="highlight-card gold">
+          <div class="highlight-icon">🏆</div>
+          <div class="highlight-info">
+            <p class="highlight-tag">⭐ Best-Selling Product</p>
+            <p class="highlight-name" id="highlight-product-name">—</p>
+            <p class="highlight-meta" id="highlight-product-meta">—</p>
+          </div>
+        </article>
+        <article class="highlight-card teal">
+          <div class="highlight-icon">💎</div>
+          <div class="highlight-info">
+            <p class="highlight-tag">🏙️ Highest Profit City</p>
+            <p class="highlight-name" id="highlight-city-name">—</p>
+            <p class="highlight-meta" id="highlight-city-meta">—</p>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- Monthly Trends -->
+    <div>
+      <p class="section-heading">Monthly Trends</p>
+      <div class="charts-row charts-row-2">
+        <article class="chart-card">
+          <div class="chart-header">
+            <div><p class="chart-title">Monthly Sales Trend</p><p class="chart-subtitle">Revenue over time</p></div>
+            <div class="chart-icon-wrap">📈</div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-sales-trend"></canvas></div>
+        </article>
+        <article class="chart-card">
+          <div class="chart-header">
+            <div><p class="chart-title">Monthly Profit Trend</p><p class="chart-subtitle">Net profit over time</p></div>
+            <div class="chart-icon-wrap">💹</div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-profit-trend"></canvas></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- Product & City -->
+    <div>
+      <p class="section-heading">Product &amp; City Performance</p>
+      <div class="charts-row charts-row-2">
+        <article class="chart-card">
+          <div class="chart-header">
+            <div><p class="chart-title">Top 5 Products by Sales</p><p class="chart-subtitle">Ranked by total revenue</p></div>
+            <div class="chart-icon-wrap">🥇</div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-top-products"></canvas></div>
+        </article>
+        <article class="chart-card">
+          <div class="chart-header">
+            <div><p class="chart-title">Sales by City</p><p class="chart-subtitle">Revenue distribution per city</p></div>
+            <div class="chart-icon-wrap">🗺️</div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-sales-city"></canvas></div>
+        </article>
+      </div>
+    </div>
+
+    <!-- Category Insights -->
+    <div>
+      <p class="section-heading">Category Insights</p>
+      <div class="charts-row charts-row-2">
+        <article class="chart-card">
+          <div class="chart-header">
+            <div><p class="chart-title">Sales by Category</p><p class="chart-subtitle">Share of total revenue</p></div>
+            <div class="chart-icon-wrap">🏷️</div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-sales-category"></canvas></div>
+        </article>
+        <article class="chart-card">
+          <div class="chart-header">
+            <div><p class="chart-title">Profit by Category</p><p class="chart-subtitle">Net profit per category</p></div>
+            <div class="chart-icon-wrap">💼</div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-profit-category"></canvas></div>
+        </article>
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="dashboard-footer">SalesPulse Analytics · 2026 · Powered by Chart.js</footer>
+</main>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const RAW_DATA = [
+  { id: "ORD001", date: "2026-01-03", city: "Cairo",      product: "Laptop",             category: "Electronics",     sales: 18500, profit: 3200, quantity: 1 },
+  { id: "ORD002", date: "2026-01-04", city: "Mansoura",   product: "Headphones",         category: "Electronics",     sales: 1200,  profit: 250,  quantity: 2 },
+  { id: "ORD003", date: "2026-01-05", city: "Alexandria", product: "Office Chair",        category: "Furniture",       sales: 4300,  profit: 900,  quantity: 1 },
+  { id: "ORD004", date: "2026-01-06", city: "Cairo",      product: "Keyboard",           category: "Electronics",     sales: 950,   profit: 180,  quantity: 3 },
+  { id: "ORD005", date: "2026-01-07", city: "Tanta",      product: "Printer",            category: "Electronics",     sales: 5200,  profit: 1100, quantity: 1 },
+  { id: "ORD006", date: "2026-01-08", city: "Giza",       product: "Monitor",            category: "Electronics",     sales: 6400,  profit: 1350, quantity: 2 },
+  { id: "ORD007", date: "2026-01-09", city: "Mansoura",   product: "Desk Lamp",          category: "Furniture",       sales: 780,   profit: 140,  quantity: 2 },
+  { id: "ORD008", date: "2026-01-10", city: "Alexandria", product: "Tablet",             category: "Electronics",     sales: 9800,  profit: 2100, quantity: 1 },
+  { id: "ORD009", date: "2026-01-11", city: "Cairo",      product: "Mouse",              category: "Electronics",     sales: 650,   profit: 120,  quantity: 4 },
+  { id: "ORD010", date: "2026-01-12", city: "Giza",       product: "Sofa",               category: "Furniture",       sales: 12500, profit: 2800, quantity: 1 },
+  { id: "ORD011", date: "2026-01-13", city: "Cairo",      product: "Smart Watch",        category: "Electronics",     sales: 3400,  profit: 700,  quantity: 2 },
+  { id: "ORD012", date: "2026-01-14", city: "Tanta",      product: "Bookshelf",          category: "Furniture",       sales: 4100,  profit: 850,  quantity: 1 },
+  { id: "ORD013", date: "2026-01-15", city: "Alexandria", product: "Phone",              category: "Electronics",     sales: 14500, profit: 2600, quantity: 1 },
+  { id: "ORD014", date: "2026-01-16", city: "Cairo",      product: "TV",                 category: "Electronics",     sales: 22000, profit: 4700, quantity: 1 },
+  { id: "ORD015", date: "2026-01-17", city: "Mansoura",   product: "Gaming Chair",       category: "Furniture",       sales: 6700,  profit: 1500, quantity: 1 },
+  { id: "ORD016", date: "2026-01-18", city: "Giza",       product: "Air Fryer",          category: "Home Appliances", sales: 3600,  profit: 800,  quantity: 2 },
+  { id: "ORD017", date: "2026-01-19", city: "Cairo",      product: "Microwave",          category: "Home Appliances", sales: 4800,  profit: 950,  quantity: 1 },
+  { id: "ORD018", date: "2026-01-20", city: "Tanta",      product: "Router",             category: "Electronics",     sales: 2100,  profit: 450,  quantity: 2 },
+  { id: "ORD019", date: "2026-01-21", city: "Alexandria", product: "Camera",             category: "Electronics",     sales: 11000, profit: 2400, quantity: 1 },
+  { id: "ORD020", date: "2026-01-22", city: "Mansoura",   product: "Speaker",            category: "Electronics",     sales: 2600,  profit: 520,  quantity: 2 },
+  { id: "ORD021", date: "2026-01-23", city: "Cairo",      product: "Vacuum Cleaner",     category: "Home Appliances", sales: 5900,  profit: 1300, quantity: 1 },
+  { id: "ORD022", date: "2026-01-24", city: "Giza",       product: "Desk",               category: "Furniture",       sales: 7200,  profit: 1650, quantity: 1 },
+  { id: "ORD023", date: "2026-01-25", city: "Tanta",      product: "Projector",          category: "Electronics",     sales: 8700,  profit: 1900, quantity: 1 },
+  { id: "ORD024", date: "2026-01-26", city: "Alexandria", product: "Coffee Machine",     category: "Home Appliances", sales: 5400,  profit: 1150, quantity: 1 },
+  { id: "ORD025", date: "2026-01-27", city: "Cairo",      product: "SSD 1TB",            category: "Electronics",     sales: 3200,  profit: 780,  quantity: 2 },
+  { id: "ORD026", date: "2026-01-28", city: "Mansoura",   product: "RAM 16GB",           category: "Electronics",     sales: 2800,  profit: 620,  quantity: 2 },
+  { id: "ORD027", date: "2026-01-29", city: "Giza",       product: "Dining Table",       category: "Furniture",       sales: 9800,  profit: 2200, quantity: 1 },
+  { id: "ORD028", date: "2026-01-30", city: "Cairo",      product: "Electric Kettle",    category: "Home Appliances", sales: 1400,  profit: 300,  quantity: 3 },
+  { id: "ORD029", date: "2026-02-01", city: "Tanta",      product: "Mouse Pad",          category: "Electronics",     sales: 300,   profit: 70,   quantity: 5 },
+  { id: "ORD030", date: "2026-02-02", city: "Alexandria", product: "Smartphone",         category: "Electronics",     sales: 17500, profit: 3500, quantity: 1 },
+  { id: "ORD031", date: "2026-02-03", city: "Cairo",      product: "Webcam",             category: "Electronics",     sales: 1900,  profit: 420,  quantity: 2 },
+  { id: "ORD032", date: "2026-02-04", city: "Mansoura",   product: "Bedroom Lamp",       category: "Furniture",       sales: 850,   profit: 180,  quantity: 2 },
+  { id: "ORD033", date: "2026-02-05", city: "Giza",       product: "Refrigerator",       category: "Home Appliances", sales: 26000, profit: 5400, quantity: 1 },
+  { id: "ORD034", date: "2026-02-06", city: "Cairo",      product: "Smart TV",           category: "Electronics",     sales: 24000, profit: 5100, quantity: 1 },
+  { id: "ORD035", date: "2026-02-07", city: "Tanta",      product: "Blender",            category: "Home Appliances", sales: 2300,  profit: 500,  quantity: 2 },
+  { id: "ORD036", date: "2026-02-08", city: "Alexandria", product: "Office Desk",        category: "Furniture",       sales: 8100,  profit: 1750, quantity: 1 },
+  { id: "ORD037", date: "2026-02-09", city: "Cairo",      product: "Power Bank",         category: "Electronics",     sales: 1300,  profit: 260,  quantity: 3 },
+  { id: "ORD038", date: "2026-02-10", city: "Mansoura",   product: "Graphic Tablet",     category: "Electronics",     sales: 7600,  profit: 1600, quantity: 1 },
+  { id: "ORD039", date: "2026-02-11", city: "Giza",       product: "Air Conditioner",    category: "Home Appliances", sales: 31000, profit: 6800, quantity: 1 },
+  { id: "ORD040", date: "2026-02-12", city: "Cairo",      product: "Laptop Stand",       category: "Electronics",     sales: 950,   profit: 200,  quantity: 3 },
+  { id: "ORD041", date: "2026-02-13", city: "Tanta",      product: "Monitor Arm",        category: "Furniture",       sales: 2700,  profit: 560,  quantity: 2 },
+  { id: "ORD042", date: "2026-02-14", city: "Alexandria", product: "Drone",              category: "Electronics",     sales: 18500, profit: 3900, quantity: 1 },
+  { id: "ORD043", date: "2026-02-15", city: "Cairo",      product: "External HDD",       category: "Electronics",     sales: 4200,  profit: 920,  quantity: 2 },
+  { id: "ORD044", date: "2026-02-16", city: "Mansoura",   product: "Water Dispenser",    category: "Home Appliances", sales: 6700,  profit: 1450, quantity: 1 },
+  { id: "ORD045", date: "2026-02-17", city: "Giza",       product: "Gaming Mouse",       category: "Electronics",     sales: 1600,  profit: 340,  quantity: 3 },
+  { id: "ORD046", date: "2026-02-18", city: "Cairo",      product: "Mechanical Keyboard",category: "Electronics",     sales: 3900,  profit: 850,  quantity: 2 },
+  { id: "ORD047", date: "2026-02-19", city: "Tanta",      product: "Washing Machine",    category: "Home Appliances", sales: 21000, profit: 4500, quantity: 1 },
+  { id: "ORD048", date: "2026-02-20", city: "Alexandria", product: "Bean Bag",           category: "Furniture",       sales: 3100,  profit: 700,  quantity: 2 },
+  { id: "ORD049", date: "2026-02-21", city: "Cairo",      product: "VR Headset",         category: "Electronics",     sales: 12500, profit: 2600, quantity: 1 },
+  { id: "ORD050", date: "2026-02-22", city: "Mansoura",   product: "Mini Fridge",        category: "Home Appliances", sales: 8200,  profit: 1750, quantity: 1 },
+];
+
+/* ============================================================
+   SCRIPT
+   ============================================================ */
+const COLORS = {
+  blue:    '#5b9aff',
+  violet:  '#a78bfa',
+  cyan:    '#22d3ee',
+  emerald: '#34d399',
+  rose:    '#fb7185',
+  amber:   '#fbbf24',
+  pink:    '#f472b6',
+  lime:    '#a3e635',
+  text:    '#94a3b8',
+  border:  'rgba(255,255,255,0.06)',
+};
+
+const CHART_PALETTE = [
+  COLORS.blue, COLORS.violet, COLORS.cyan, COLORS.emerald,
+  COLORS.amber, COLORS.rose, COLORS.pink, COLORS.lime,
+];
+
+Chart.defaults.color = COLORS.text;
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.font.weight = 500;
+
+let activeFilters = { city:'all', category:'all', product:'all', dateFrom:'', dateTo:'' };
+let charts = {};
+
+const fmt = {
+  currency: n => 'EGP ' + n.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+  number:   n => n.toLocaleString('en-US'),
+  pct:      n => (n >= 0 ? '▲ +' : '▼ ') + Math.abs(n).toFixed(1) + '%',
+};
+
+function groupBy(data, key) {
+  const fn = typeof key === 'function' ? key : r => r[key];
+  return data.reduce((m, r) => { const k = fn(r); (m[k] = m[k] || []).push(r); return m; }, {});
+}
+
+function sumBy(data, key) { return data.reduce((s, r) => s + r[key], 0); }
+
+function animateValue(el, target, prefix = '', duration = 600) {
+  const start = parseInt(el.dataset.current || '0', 10) || 0;
+  const diff = target - start;
+  if (diff === 0) { el.textContent = prefix + target.toLocaleString('en-US'); return; }
+  const startTime = performance.now();
+  function tick(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(start + diff * ease);
+    el.textContent = prefix + current.toLocaleString('en-US');
+    if (progress < 1) requestAnimationFrame(tick);
+    else el.dataset.current = target;
+  }
+  requestAnimationFrame(tick);
+}
+
+function getFiltered() {
+  return RAW_DATA.filter(r => {
+    if (activeFilters.city     !== 'all' && r.city     !== activeFilters.city)     return false;
+    if (activeFilters.category !== 'all' && r.category !== activeFilters.category) return false;
+    if (activeFilters.product  !== 'all' && r.product  !== activeFilters.product)  return false;
+    if (activeFilters.dateFrom && r.date < activeFilters.dateFrom) return false;
+    if (activeFilters.dateTo   && r.date > activeFilters.dateTo)   return false;
+    return true;
+  });
+}
+
+function computeGrowth(data, metric) {
+  const byMonth = groupBy(data, r => r.date.slice(0, 7));
+  const months = Object.keys(byMonth).sort();
+  if (months.length < 2) return null;
+  const last  = sumBy(byMonth[months[months.length - 1]], metric);
+  const prior = sumBy(byMonth[months[months.length - 2]], metric);
+  if (prior === 0) return null;
+  return ((last - prior) / prior) * 100;
+}
+
+function populateSelects() {
+  const cities     = [...new Set(RAW_DATA.map(r => r.city))].sort();
+  const categories = [...new Set(RAW_DATA.map(r => r.category))].sort();
+  const products   = [...new Set(RAW_DATA.map(r => r.product))].sort();
+
+  fillSelect('filter-city',     cities,     'All Cities');
+  fillSelect('filter-category', categories, 'All Categories');
+  fillSelect('filter-product',  products,   'All Products');
+
+  const dates = RAW_DATA.map(r => r.date).sort();
+  document.getElementById('filter-date-from').value = dates[0];
+  document.getElementById('filter-date-to').value   = dates[dates.length - 1];
+  activeFilters.dateFrom = dates[0];
+  activeFilters.dateTo   = dates[dates.length - 1];
+}
+
+function fillSelect(id, items, placeholder) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="all">${placeholder}</option>`;
+  items.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = item;
+    sel.appendChild(opt);
+  });
+}
+
+function updateKPIs(data) {
+  const totalSales    = sumBy(data, 'sales');
+  const totalProfit   = sumBy(data, 'profit');
+  const totalOrders   = data.length;
+  const totalQuantity = sumBy(data, 'quantity');
+
+  const salesGrowth   = computeGrowth(data, 'sales');
+  const profitGrowth  = computeGrowth(data, 'profit');
+
+  setKPI('kpi-sales',    totalSales,    'EGP ', salesGrowth,  'vs prior month');
+  setKPI('kpi-profit',   totalProfit,   'EGP ', profitGrowth, 'vs prior month');
+  setKPI('kpi-orders',   totalOrders,   '',     null,         `${new Set(data.map(r => r.date.slice(0,7))).size} month(s)`);
+  setKPI('kpi-quantity', totalQuantity, '',     null,         'units sold');
+}
+
+function setKPI(id, value, prefix, growth, sub) {
+  animateValue(document.getElementById(id + '-value'), value, prefix);
+  const badge = document.getElementById(id + '-badge');
+  if (growth === null) {
+    badge.textContent = '—';
+    badge.className = 'kpi-badge neutral';
+  } else {
+    badge.textContent = fmt.pct(growth);
+    badge.className   = 'kpi-badge ' + (growth >= 0 ? 'up' : 'down');
+  }
+  document.getElementById(id + '-sub').textContent = sub;
+}
+
+function updateHighlights(data) {
+  const byProduct = groupBy(data, 'product');
+  let bestProduct = { name: '—', sales: 0 };
+  Object.entries(byProduct).forEach(([p, rows]) => {
+    const s = sumBy(rows, 'sales');
+    if (s > bestProduct.sales) bestProduct = { name: p, sales: s };
+  });
+
+  const byCity = groupBy(data, 'city');
+  let bestCity = { name: '—', profit: 0 };
+  Object.entries(byCity).forEach(([c, rows]) => {
+    const p = sumBy(rows, 'profit');
+    if (p > bestCity.profit) bestCity = { name: c, profit: p };
+  });
+
+  document.getElementById('highlight-product-name').textContent = bestProduct.name;
+  document.getElementById('highlight-product-meta').textContent = `Total Sales: ${fmt.currency(bestProduct.sales)}`;
+  document.getElementById('highlight-city-name').textContent    = bestCity.name;
+  document.getElementById('highlight-city-meta').textContent    = `Total Profit: ${fmt.currency(bestCity.profit)}`;
+}
+
+function updateTitle(data) {
+  const parts = [];
+  if (activeFilters.city     !== 'all') parts.push(activeFilters.city);
+  if (activeFilters.category !== 'all') parts.push(activeFilters.category);
+  if (activeFilters.product  !== 'all') parts.push(activeFilters.product);
+
+  const months = [...new Set(data.map(r => r.date.slice(0,7)))].sort();
+  const dateLabel = months.length === 1
+    ? new Date(months[0]+'-01').toLocaleString('en-US',{month:'long',year:'numeric'})
+    : months.length > 0 ? `${months.length} Months` : 'No Data';
+
+  const scope = parts.length ? parts.join(' · ') + ' — ' : '';
+  document.getElementById('dashboard-title').textContent    = `${scope}Sales Dashboard`;
+  document.getElementById('dashboard-subtitle').textContent = `${dateLabel} · ${data.length} Orders`;
+  document.getElementById('records-badge').textContent      = `${data.length} records`;
+}
+
+function destroyChart(key) { if (charts[key]) { charts[key].destroy(); delete charts[key]; } }
+
+function tooltipStyle() {
+  return {
+    backgroundColor: 'rgba(10,13,20,0.95)',
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    titleFont: { weight: 700, size: 13 },
+    bodyFont: { size: 12 },
+    padding: 12,
+    cornerRadius: 10,
+    displayColors: true,
+    boxPadding: 4,
+  };
+}
+
+function gridStyle() {
+  return { color: 'rgba(255,255,255,0.04)', drawBorder: false };
+}
+
+function renderSalesTrend(data) {
+  destroyChart('salesTrend');
+  const byMonth = groupBy(data, r => r.date.slice(0,7));
+  const months  = Object.keys(byMonth).sort();
+  if (!months.length) { showEmpty('chart-sales-trend'); return; }
+
+  const labels = months.map(m => new Date(m+'-01').toLocaleString('en-US',{month:'short',year:'2-digit'}));
+  const values = months.map(m => sumBy(byMonth[m], 'sales'));
+  const ctx = document.getElementById('chart-sales-trend').getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,240);
+  grad.addColorStop(0,'rgba(91,154,255,0.3)');
+  grad.addColorStop(1,'rgba(91,154,255,0)');
+
+  charts.salesTrend = new Chart(ctx, {
+    type:'line',
+    data: { labels, datasets: [{
+      data: values,
+      borderColor: COLORS.blue,
+      backgroundColor: grad,
+      borderWidth: 2.5,
+      pointBackgroundColor: COLORS.blue,
+      pointBorderColor: '#0b0f1a',
+      pointBorderWidth: 2,
+      pointRadius: 5,
+      pointHoverRadius: 8,
+      fill: true,
+      tension: 0.45,
+    }]},
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{...tooltipStyle(),callbacks:{label:c=>` Sales: ${fmt.currency(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:gridStyle(),ticks:{font:{size:11}}},
+        y:{grid:gridStyle(),ticks:{font:{size:11},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}},
+      },
+    },
+  });
+}
+
+function renderProfitTrend(data) {
+  destroyChart('profitTrend');
+  const byMonth = groupBy(data, r => r.date.slice(0,7));
+  const months  = Object.keys(byMonth).sort();
+  if (!months.length) { showEmpty('chart-profit-trend'); return; }
+
+  const labels = months.map(m => new Date(m+'-01').toLocaleString('en-US',{month:'short',year:'2-digit'}));
+  const values = months.map(m => sumBy(byMonth[m], 'profit'));
+  const ctx = document.getElementById('chart-profit-trend').getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,240);
+  grad.addColorStop(0,'rgba(52,211,153,0.3)');
+  grad.addColorStop(1,'rgba(52,211,153,0)');
+
+  charts.profitTrend = new Chart(ctx, {
+    type:'line',
+    data: { labels, datasets: [{
+      data: values,
+      borderColor: COLORS.emerald,
+      backgroundColor: grad,
+      borderWidth: 2.5,
+      pointBackgroundColor: COLORS.emerald,
+      pointBorderColor: '#0b0f1a',
+      pointBorderWidth: 2,
+      pointRadius: 5,
+      pointHoverRadius: 8,
+      fill: true,
+      tension: 0.45,
+    }]},
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{...tooltipStyle(),callbacks:{label:c=>` Profit: ${fmt.currency(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:gridStyle(),ticks:{font:{size:11}}},
+        y:{grid:gridStyle(),ticks:{font:{size:11},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}},
+      },
+    },
+  });
+}
+
+function renderTopProducts(data) {
+  destroyChart('topProducts');
+  const byProduct = groupBy(data, 'product');
+  const sorted = Object.entries(byProduct)
+    .map(([p,rows])=>({label:p,value:sumBy(rows,'sales')}))
+    .sort((a,b)=>b.value-a.value).slice(0,5);
+  if (!sorted.length) { showEmpty('chart-top-products'); return; }
+
+  const ctx = document.getElementById('chart-top-products').getContext('2d');
+  charts.topProducts = new Chart(ctx, {
+    type:'bar',
+    data: {
+      labels: sorted.map(d=>d.label),
+      datasets:[{
+        data: sorted.map(d=>d.value),
+        backgroundColor: sorted.map((_,i)=>CHART_PALETTE[i]+'cc'),
+        borderColor: sorted.map((_,i)=>CHART_PALETTE[i]),
+        borderWidth: 1.5,
+        borderRadius: 8,
+        borderSkipped: false,
+        barPercentage: 0.65,
+      }],
+    },
+    options: {
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...tooltipStyle(),callbacks:{label:c=>` ${fmt.currency(c.parsed.x)}`}}},
+      scales:{
+        x:{grid:gridStyle(),ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v,font:{size:11}}},
+        y:{grid:{display:false},ticks:{font:{size:11,weight:600}}},
+      },
+    },
+  });
+}
+
+function renderSalesByCity(data) {
+  destroyChart('salesCity');
+  const byCity = groupBy(data, 'city');
+  const sorted = Object.entries(byCity)
+    .map(([c,rows])=>({label:c,value:sumBy(rows,'sales')}))
+    .sort((a,b)=>b.value-a.value);
+  if (!sorted.length) { showEmpty('chart-sales-city'); return; }
+
+  const ctx = document.getElementById('chart-sales-city').getContext('2d');
+  charts.salesCity = new Chart(ctx, {
+    type:'doughnut',
+    data: {
+      labels: sorted.map(d=>d.label),
+      datasets:[{
+        data: sorted.map(d=>d.value),
+        backgroundColor: CHART_PALETTE.map(c=>c+'cc'),
+        borderColor: CHART_PALETTE,
+        borderWidth: 2,
+        hoverOffset: 14,
+        spacing: 3,
+      }],
+    },
+    options: {
+      responsive:true,maintainAspectRatio:false,cutout:'68%',
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11,weight:500},padding:16,usePointStyle:true,pointStyleWidth:8}},
+        tooltip:{...tooltipStyle(),callbacks:{label:c=>` ${c.label}: ${fmt.currency(c.parsed)}`}},
+      },
+    },
+  });
+}
+
+function renderSalesByCategory(data) {
+  destroyChart('salesCategory');
+  const byCat = groupBy(data, 'category');
+  const sorted = Object.entries(byCat)
+    .map(([c,rows])=>({label:c,value:sumBy(rows,'sales')}))
+    .sort((a,b)=>b.value-a.value);
+  if (!sorted.length) { showEmpty('chart-sales-category'); return; }
+
+  const catColors = [COLORS.blue, COLORS.violet, COLORS.cyan, COLORS.emerald];
+  const ctx = document.getElementById('chart-sales-category').getContext('2d');
+  charts.salesCategory = new Chart(ctx, {
+    type:'pie',
+    data: {
+      labels: sorted.map(d=>d.label),
+      datasets:[{
+        data: sorted.map(d=>d.value),
+        backgroundColor: catColors.map(c=>c+'cc'),
+        borderColor: catColors,
+        borderWidth: 2,
+        hoverOffset: 14,
+        spacing: 3,
+      }],
+    },
+    options: {
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11,weight:500},padding:16,usePointStyle:true,pointStyleWidth:8}},
+        tooltip:{...tooltipStyle(),callbacks:{label:c=>` ${c.label}: ${fmt.currency(c.parsed)}`}},
+      },
+    },
+  });
+}
+
+function renderProfitByCategory(data) {
+  destroyChart('profitCategory');
+  const byCat = groupBy(data, 'category');
+  const sorted = Object.entries(byCat)
+    .map(([c,rows])=>({label:c,value:sumBy(rows,'profit')}))
+    .sort((a,b)=>b.value-a.value);
+  if (!sorted.length) { showEmpty('chart-profit-category'); return; }
+
+  const catColors = [COLORS.violet, COLORS.blue, COLORS.cyan, COLORS.emerald];
+  const ctx = document.getElementById('chart-profit-category').getContext('2d');
+  charts.profitCategory = new Chart(ctx, {
+    type:'bar',
+    data: {
+      labels: sorted.map(d=>d.label),
+      datasets:[{
+        data: sorted.map(d=>d.value),
+        backgroundColor: catColors.map(c=>c+'bb'),
+        borderColor: catColors,
+        borderWidth: 1.5,
+        borderRadius: 10,
+        borderSkipped: false,
+        barPercentage: 0.55,
+      }],
+    },
+    options: {
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...tooltipStyle(),callbacks:{label:c=>` ${fmt.currency(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:11,weight:600}}},
+        y:{grid:gridStyle(),ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v,font:{size:11}}},
+      },
+    },
+  });
+}
+
+function showEmpty(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const parent = canvas.parentElement;
+  canvas.style.display = 'none';
+  if (!parent.querySelector('.empty-state'))
+    parent.insertAdjacentHTML('beforeend', '<div class="empty-state"><div class="icon">📭</div><span>No data matches the current filters</span></div>');
+}
+
+function clearEmpties() {
+  document.querySelectorAll('.empty-state').forEach(e => e.remove());
+  document.querySelectorAll('.chart-wrap canvas').forEach(c => c.style.display = '');
+}
+
+function render() {
+  clearEmpties();
+  const data = getFiltered();
+  updateKPIs(data);
+  updateHighlights(data);
+  updateTitle(data);
+  renderSalesTrend(data);
+  renderProfitTrend(data);
+  renderTopProducts(data);
+  renderSalesByCity(data);
+  renderSalesByCategory(data);
+  renderProfitByCategory(data);
+}
+
+function bindEvents() {
+  const on = (id, cb) => document.getElementById(id).addEventListener('change', cb);
+  on('filter-city',      e => { activeFilters.city = e.target.value; render(); });
+  on('filter-category',  e => { activeFilters.category = e.target.value; render(); });
+  on('filter-product',   e => { activeFilters.product = e.target.value; render(); });
+  on('filter-date-from', e => { activeFilters.dateFrom = e.target.value; render(); });
+  on('filter-date-to',   e => { activeFilters.dateTo = e.target.value; render(); });
+
+  document.getElementById('reset-filters').addEventListener('click', () => {
+    activeFilters = { city:'all', category:'all', product:'all', dateFrom:'', dateTo:'' };
+    document.getElementById('filter-city').value = 'all';
+    document.getElementById('filter-category').value = 'all';
+    document.getElementById('filter-product').value = 'all';
+    const dates = RAW_DATA.map(r=>r.date).sort();
+    document.getElementById('filter-date-from').value = dates[0];
+    document.getElementById('filter-date-to').value = dates[dates.length-1];
+    activeFilters.dateFrom = dates[0];
+    activeFilters.dateTo = dates[dates.length-1];
+    render();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  populateSelects();
+  bindEvents();
+  render();
+});
+</script>
+</body>
+</html>
